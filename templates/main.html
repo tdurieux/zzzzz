@@ -3,19 +3,59 @@
 <head>
 <meta charset="utf-8">
 
+<style>
+    .nvd3 g.nv-groups path.nv-line {
+          stroke-width: 5px;
+    }
+    .content {
+        width: 80%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 20%;
+        bottom: 0;
+        overflow: scroll;
+    }
+    .users {
+        position: absolute;
+        top: 0;
+        left: 80%;
+        right: 0;
+        bottom: 0;
+        float: left;
+        height: 100%;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        border-left: 1px solid #DDD;
+    }
+    .users ul {
+        margin: 0;
+        padding: 0;
+    }
+    .users li {
+        list-style: none;
+        border-bottom: 1px solid #DDD;
+        padding: 7px 2px;
+        margin: 0;
+    }
+</style>
 </head>
 <body>
+    <div id="page">
+    <div class="content">
+    <svg id="chart" style=""></svg>
+    </div>
+    <div class="users">
     <form id="uid-form" method="POST" action="#">
         <label for="uid-input">Facebook uid to graph</label>
         <input id="uid-input" type="text"> </input>
         <input type="submit"></input>
     </form>
-    <svg id="chart" style="width:100%; height:900px;"></svg>
-    <style>
-        .nvd3 g.nv-groups path.nv-line {
-              stroke-width: 5px;
-        }
-    </style>
+    <ul>
+        
+    </ul>
+    </div>
+    </div>
 
 
 
@@ -28,12 +68,26 @@
 
 <script type="text/javascript">
 
+$.get("data/users", function (data) {
+    data = JSON.parse(data);
+    data = data.sort(function (a, b) {
+        var aName = a.split("#")[1].replace(".csv", "");
+        var bName = b.split("#")[1].replace(".csv", "");
+        if(aName < bName) {
+            return -1;
+        }
+        if(aName > bName) {
+            return 1;
+        }
+        return 0;
+    });
+    data.forEach(function (i) {
+        var name = i.split("#")[1].replace(".csv", "");
+        $(".users ul").append("<li onclick='displayChart(\""+i+"\")'>" + name + "</li>");
+    })
+});
 
-$("#uid-form").submit(function(e) {
-
-  e.preventDefault();
-  var uid = $("#uid-input").val();
-
+function displayChart (uid) {
     var statuses = "status webStatus messengerStatus fbAppStatus otherStatus".split(" ");
 
     d3.csv("data/" + uid, function(error, data) {
@@ -41,8 +95,8 @@ $("#uid-form").submit(function(e) {
         var ch = nv.addGraph(function() {
 
             var chart = nv.models.lineWithFocusChart()
-            .width(1400)
-            .height(800)
+            .width($(".content").width())
+            .height($(".content").height())
             .x(function(d){return d.x})
             .y(function(d){return d.y});
 
@@ -72,6 +126,7 @@ $("#uid-form").submit(function(e) {
             data.forEach(function(d) {
                 // That's right I actually want to loop through the array indices take that ES7
                 for (var index in statuses) {
+                    console.log(d[statuses[index]])
                     graphData[index]["values"].push({
                         // Multiply by 1000 to get to millis okay then js.
                             x: new Date(Number(d["time"]) * 1000),
@@ -108,6 +163,13 @@ $("#uid-form").submit(function(e) {
             return chart;
         });
     });
+}
+$("#uid-form").submit(function(e) {
+    e.preventDefault();
+
+    var uid = $("#uid-input").val();
+
+    displayChart(uid);
 });
 
 

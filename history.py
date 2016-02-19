@@ -14,8 +14,8 @@ class StatusHistory():
     # Save the start time so computation time doesn't offset the measured time.
     START_TIME = int(time.time())
 
-    def __init__(self, uid):
-        with open("log/{uid}.txt".format(uid=uid)) as f:
+    def __init__(self, uid, name):
+        with open("log/{uid}#{name}.txt".format(uid=uid,name=name)) as f:
             self.activity = self.parse_status(map(str.strip, f.readlines()))
 
     def create_time_map(self, status_list):
@@ -67,6 +67,5 @@ class StatusHistory():
                 yield status_obj.highest_active_status_type()
             else:
                 yield status_obj._status[status_type]
-
 
 
